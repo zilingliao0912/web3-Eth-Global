@@ -1,0 +1,2730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <title>Dead Reckoning — narrative v4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+  <style>
+    :root {
+      --bg: #c9d4df;
+      --ds-bg: #c9d4df;
+      --ds-navy: #0d1b2a;
+      --ds-teal: #0891b2;
+      --ds-red: #e24b4a;
+      --ds-green: #1d9e75;
+      --ds-amber: #ef9f27;
+      --ds-gray: #64748b;
+      --ds-text: #1e293b;
+      --ds-muted: #64748b;
+      --ds-card: rgba(255, 255, 255, 0.7);
+      --ds-maxw: 1200px;
+      --ds-pad: 6rem 2rem;
+      --kpi-h: 56px;
+      --header-h: 48px;
+      --deep: #0d1b2a;
+      --lumen: #e8ecf4;
+      --signal: #55aaff;
+    }
+    * { box-sizing: border-box; }
+    html {
+      scroll-padding-top: calc(var(--kpi-h) + var(--header-h) + 8px);
+    }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--ds-bg);
+      overflow-x: hidden;
+    }
+    body {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    #kpi-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      min-height: var(--kpi-h);
+      padding: 8px 16px;
+      z-index: 200;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 20px 28px;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.85);
+      pointer-events: none;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: #0a0a1e;
+      transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+    }
+    #kpi-bar .k-sep { opacity: 0.35; }
+    #kpi-bar .k-val { font-weight: 700; color: #0a0a1e; }
+
+    body.journey-active #kpi-bar {
+      background: rgba(255, 255, 255, 0.88);
+      border-bottom-color: rgba(255, 255, 255, 0.9);
+      color: #0a0a1e;
+    }
+    body.journey-active #kpi-bar .k-val { color: #0a0a1e; }
+    body.journey-active #kpi-bar .k-sep { opacity: 0.35; }
+
+    #site-header {
+      position: fixed;
+      top: var(--kpi-h);
+      left: 0;
+      right: 0;
+      height: var(--header-h);
+      z-index: 1999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      pointer-events: auto;
+      transition: background 0.35s ease, border-color 0.35s ease;
+    }
+    body.journey-active #site-header {
+      background: rgba(255, 255, 255, 0.82);
+      border-bottom-color: rgba(0, 0, 0, 0.06);
+    }
+    #site-header .sh-brand {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #0a0a1e;
+      transition: color 0.35s ease;
+    }
+    body.journey-active #site-header .sh-brand {
+      color: #0a0a1e;
+    }
+    #site-header nav {
+      display: flex;
+      gap: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    #site-header nav a {
+      color: #4a5568;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    #site-header nav a:hover {
+      color: #0a0a1e;
+    }
+    body.journey-active #site-header nav a {
+      color: #4a5568;
+    }
+    body.journey-active #site-header nav a:hover {
+      color: #0a0a1e;
+    }
+
+    #landing-hero {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #c8d4e0;
+      padding: 40px;
+      padding-top: calc(var(--kpi-h) + var(--header-h) + 40px);
+      box-sizing: border-box;
+    }
+    #landing-hero-inner {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    #landing-hero .eyebrow {
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #4a6688;
+      margin: 0 0 32px;
+    }
+    #landing-hero h1 {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      font-size: clamp(2.25rem, 8vw, 72px);
+      font-weight: 700;
+      color: #0a0a1e;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+    }
+    #landing-hero h1 .cents { color: #0a0a1e; }
+    #landing-hero .subtitle {
+      margin: 24px auto 0;
+      max-width: 640px;
+      font-size: 18px;
+      line-height: 1.5;
+      color: #4a5568;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    #landing-hero .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 48px;
+      border: none;
+      box-shadow: none;
+      outline: none;
+      background: transparent;
+    }
+    #landing-hero .hero-stat-card {
+      flex: 1 1 0;
+      min-width: 0;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(13, 27, 42, 0.04);
+      padding: 28px 32px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    #landing-hero .hero-stat-val {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.1;
+      color: #0a0a1e;
+    }
+    #landing-hero .hero-stat-label {
+      margin-top: 8px;
+      font-size: 14px;
+      line-height: 1.4;
+      color: #4a5568;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    @media (max-width: 640px) {
+      #landing-hero .hero-stats { flex-direction: column; align-items: stretch; }
+      #landing-hero .hero-stat-card { max-width: none; }
+    }
+    @media (max-width: 640px) {
+      #landing-hero .hero-stats {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      #landing-hero .hero-stat-card {
+        max-width: none;
+      }
+    }
+    #landing-scroll-cue {
+      margin: 64px 0 0;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: #336688;
+      opacity: 0.3;
+    }
+
+    #journey-scroll {
+      position: relative;
+      height: 800vh;
+      z-index: 2;
+      pointer-events: none;
+      background: transparent;
+    }
+    #hero-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      display: block;
+      z-index: 1;
+      pointer-events: none;
+      background: #e8f0f8;
+    }
+
+    #station-card {
+      position: fixed;
+      bottom: 48px;
+      left: 48px;
+      max-width: 340px;
+      padding: 28px 32px;
+      background: #ffffff;
+      border: none;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      z-index: 100;
+      text-align: left;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    #station-card .sc-top {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    #station-card .sc-numbox {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      background: #ffffff;
+      border: 1px solid #e0e8f0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #0a0a1e;
+    }
+    #station-card .sc-titlecol { flex: 1; min-width: 0; }
+    #station-card .sc-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0a0a1e;
+      line-height: 1.25;
+    }
+    #station-card .sc-pct {
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 2px;
+      color: #4a5568;
+    }
+    #station-card .sc-desc {
+      margin-top: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #4a5568;
+    }
+    #station-card .sc-quote {
+      margin-top: 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      font-style: italic;
+      color: #8899aa;
+      padding-left: 12px;
+      border-left: 3px solid #55aaff;
+    }
+
+    #journey-rail {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      position: fixed;
+      top: 50%;
+      right: 28px;
+      transform: translateY(-50%);
+      z-index: 60;
+      gap: 10px;
+      font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    body.journey-active #journey-rail {
+      opacity: 1;
+    }
+    #journey-rail .jr-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      color: rgba(232, 236, 244, 0.35);
+      margin-bottom: 4px;
+    }
+    #journey-rail .jr-steps {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    #journey-rail .jr-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(232, 236, 244, 0.28);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.25s ease;
+    }
+    #journey-rail .jr-step::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(232, 236, 244, 0.2);
+      border: 1px solid rgba(232, 236, 244, 0.25);
+      flex-shrink: 0;
+      transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    #journey-rail .jr-step.is-active {
+      color: rgba(232, 236, 244, 0.95);
+    }
+    #journey-rail .jr-step.is-active::before {
+      background: var(--signal);
+      border-color: rgba(85, 170, 255, 0.95);
+      box-shadow: 0 0 12px rgba(85, 170, 255, 0.55);
+    }
+    @media (max-width: 720px) {
+      #journey-rail {
+        right: 14px;
+        gap: 6px;
+      }
+      #journey-rail .jr-step span:last-child {
+        display: none;
+      }
+    }
+
+    #site-footer {
+      position: relative;
+      z-index: 10;
+      padding: 56px 24px 72px;
+      background: var(--deep);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(232, 236, 244, 0.38);
+      text-align: center;
+    }
+    #site-footer .sf-inner {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    #site-footer .sf-mark {
+      color: rgba(232, 236, 244, 0.65);
+    }
+    #site-footer .sf-sep {
+      margin: 0 0.5em;
+      opacity: 0.35;
+    }
+
+    #network-section {
+      position: relative;
+      z-index: 30;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: #c8d4e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: calc(var(--kpi-h) + var(--header-h) + 12px);
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+      padding-bottom: 1rem;
+      box-sizing: border-box;
+    }
+    #network-section .network-section-label {
+      position: static;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+      font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ds-teal);
+      pointer-events: none;
+    }
+    .network-section-desc {
+      position: static;
+      width: 100%;
+      max-width: 720px;
+      margin: 8px auto 0;
+      text-align: center;
+      font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--ds-muted);
+      pointer-events: none;
+    }
+    .sphere-legend {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 1.5rem;
+      justify-content: center;
+      padding: 0.5rem 0 1.5rem 0;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      pointer-events: none;
+    }
+    .sphere-legend .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      color: #1e293b;
+      background: transparent;
+      font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .sphere-legend .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .network-canvas-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      flex: 1 1 auto;
+      flex-shrink: 0;
+      min-height: 400px;
+      height: 70vh;
+      max-height: 720px;
+      align-self: stretch;
+      margin: 0 auto;
+    }
+    #network-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      cursor: grab;
+      touch-action: none;
+    }
+    #network-canvas:active {
+      cursor: grabbing;
+    }
+    #net-tooltip {
+      position: fixed;
+      z-index: 300;
+      padding: 8px 12px;
+      pointer-events: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: #0a0a1e;
+      background: #fff;
+      border: 1px solid #d0dde8;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      max-width: 280px;
+    }
+    #net-tooltip[hidden] {
+      display: none;
+    }
+    .net-zoom-bar {
+      position: absolute;
+      bottom: 28px;
+      right: 24px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .net-zoom-bar button {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      font-size: 18px;
+      line-height: 1;
+      color: #0a0a1e;
+      background: #fff;
+      border: 1px solid #d0dde8;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .net-zoom-bar button:hover {
+      background: #f4f8fc;
+    }
+    #net-summary-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 399;
+      background: transparent;
+    }
+    #net-summary-backdrop.is-open {
+      display: block;
+    }
+    #net-summary-card {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      width: 480px;
+      max-width: calc(100vw - 24px);
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      padding: 32px;
+      padding-top: 40px;
+      box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.1);
+      z-index: 400;
+      font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+    }
+    #net-summary-card.is-open {
+      display: block;
+    }
+    #net-summary-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      font-size: 22px;
+      line-height: 1;
+      color: #4a5568;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    #net-summary-close:hover {
+      background: #f0f4f8;
+      color: #0a0a1e;
+    }
+    #net-summary-body .net-sum-wallet {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      word-break: break-all;
+      color: #0a0a1e;
+      margin-bottom: 16px;
+    }
+    #net-summary-body .net-sum-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    #net-summary-body .net-sum-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 20px;
+      font-size: 13px;
+      color: #4a5568;
+      margin-bottom: 16px;
+    }
+    #net-summary-body .net-sum-grid strong {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #8899aa;
+      margin-bottom: 4px;
+    }
+    #net-summary-body .net-sum-rec {
+      font-size: 14px;
+      line-height: 1.45;
+      color: #0a0a1e;
+      margin: 0;
+    }
+
+    /* —— Narrative dashboard (v4) —— */
+    .narr-section {
+      position: relative;
+      z-index: 12;
+      max-width: var(--ds-maxw);
+      margin: 0 auto;
+      padding: var(--ds-pad);
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      color: var(--ds-text);
+      background: var(--ds-bg);
+    }
+    .narr-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ds-muted);
+      margin: 0 0 1.5rem;
+    }
+    .narr-card {
+      background: var(--ds-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(13, 27, 42, 0.06);
+    }
+
+    #story-opening {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: calc(var(--kpi-h) + var(--header-h));
+      bottom: 0;
+      z-index: 25;
+      background: var(--ds-bg);
+      pointer-events: none;
+      transition: opacity 0.65s ease, visibility 0s linear 0.65s;
+    }
+    #story-opening.is-done {
+      opacity: 0;
+      visibility: hidden;
+    }
+    #opening-rain-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #landing-hero {
+      background: var(--ds-bg);
+    }
+    #landing-hero .hero-ghost {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.12;
+      background-image: radial-gradient(circle, var(--ds-gray) 1px, transparent 1.5px);
+      background-size: 14px 18px;
+      z-index: 0;
+    }
+    #landing-hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: var(--ds-maxw);
+    }
+    #hero-headline {
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      color: var(--ds-text);
+    }
+    #hero-headline.is-visible {
+      opacity: 1;
+      transform: none;
+    }
+    #landing-hero h1 .cents {
+      color: var(--ds-teal);
+    }
+    #landing-hero .subtitle {
+      color: var(--ds-muted);
+    }
+    #landing-hero .eyebrow {
+      color: var(--ds-teal);
+    }
+    .hero-stat-card.narr-wait {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .hero-stat-card.narr-in {
+      opacity: 1;
+      transform: none;
+    }
+    .hero-stat-card--green .hero-stat-val {
+      color: var(--ds-green);
+    }
+    #landing-hero .hero-stat-card.is-cracked {
+      position: relative;
+      box-shadow: none;
+    }
+    #landing-hero .hero-stat-card.is-cracked::after {
+      content: '';
+      position: absolute;
+      inset: 10px;
+      border-top: 1px solid rgba(13, 27, 42, 0.35);
+      transform: rotate(-8deg);
+      opacity: 0;
+      animation: narr-crack 0.6s ease forwards;
+    }
+    @keyframes narr-crack {
+      to {
+        opacity: 1;
+      }
+    }
+
+    #act-funnel .funnel-row {
+      display: grid;
+      grid-template-columns: minmax(200px, 1.1fr) minmax(120px, 2fr) minmax(140px, 0.9fr);
+      gap: 1rem 1.5rem;
+      align-items: center;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 0.35rem;
+      border-radius: 12px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      position: relative;
+      overflow: visible;
+    }
+    #act-funnel .funnel-row.is-in {
+      opacity: 1;
+      transform: none;
+    }
+    #act-funnel .funnel-row-label {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--ds-text);
+    }
+    #act-funnel .funnel-sub {
+      font-size: 12px;
+      color: var(--ds-muted);
+      margin-top: 4px;
+    }
+    #act-funnel .funnel-bar-wrap {
+      height: 10px;
+      background: rgba(13, 27, 42, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    #act-funnel .funnel-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #act-funnel .funnel-meta {
+      text-align: right;
+      font-size: 14px;
+    }
+    #act-funnel .funnel-count {
+      font-weight: 700;
+      color: var(--ds-text);
+    }
+    #act-funnel .funnel-usd {
+      font-size: 12px;
+      color: var(--ds-muted);
+    }
+    #act-funnel .funnel-drop {
+      font-size: 13px;
+      color: var(--ds-red);
+      margin: 0.25rem 0 0.75rem 1.25rem;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    #act-funnel .funnel-drop.is-in {
+      opacity: 1;
+      transform: none;
+    }
+    #act-funnel .funnel-particles {
+      position: absolute;
+      right: 2rem;
+      top: 0;
+      bottom: 0;
+      width: 120px;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    #act-funnel .funnel-row .funnel-escape-dot {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--ds-gray);
+      opacity: 0.85;
+      transition: transform 0.8s ease, opacity 0.8s ease;
+    }
+    #act-funnel .funnel-row[data-pulse='1'] .funnel-count {
+      color: var(--ds-green);
+    }
+    #act-funnel .funnel-foot {
+      text-align: center;
+      margin-top: 2.5rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    #act-funnel .funnel-foot.is-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #act-funnel .funnel-foot-pill {
+      display: inline-block;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #0891b2;
+      text-align: center;
+      background: rgba(8, 145, 178, 0.1);
+      border: 1px solid #0891b2;
+      border-radius: 6px;
+      padding: 0.6rem 2rem;
+    }
+
+    #act-buckets .bucket-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      perspective: 1200px;
+    }
+    @media (max-width: 960px) {
+      #act-buckets .bucket-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .bucket-card {
+      height: 320px;
+      cursor: default;
+    }
+    .bucket-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .bucket-card.is-flipped .bucket-card-inner {
+      transform: rotateY(180deg);
+    }
+    .bucket-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+    }
+    .bucket-face.back {
+      transform: rotateY(180deg);
+      text-align: left;
+      align-items: flex-start;
+    }
+    .bucket-face.front {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.65));
+    }
+    .bucket-amt {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--ds-text);
+    }
+    .bucket-amt-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+    .bucket-2-amt-sub {
+      font-size: 0.8rem;
+      color: #1d9e75;
+      opacity: 0.8;
+      font-weight: 500;
+    }
+    #bucket-2 .bucket-face.front .bucket-2-amt-sub {
+      text-align: center;
+    }
+    .bucket-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      margin-top: 1rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+    .bucket-desc {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--ds-muted);
+      margin-top: 12px;
+    }
+    .bucket-card--punch {
+      animation: bucket-punch 0.2s ease;
+    }
+    @keyframes bucket-punch {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.03);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    .bucket-card--glow {
+      animation: bucket-glow 0.6s ease;
+    }
+    @keyframes bucket-glow {
+      0% {
+        box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.45);
+      }
+      100% {
+        box-shadow: 0 0 0 12px rgba(34, 211, 238, 0);
+      }
+    }
+
+    #act-rail-charts {
+      z-index: 12;
+    }
+    #act-rail-charts .chart-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+    @media (max-width: 960px) {
+      #act-rail-charts .chart-wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+    #act-rail-charts .chart-box {
+      padding: 1.25rem;
+      border-radius: 16px;
+      background: var(--ds-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      min-height: 280px;
+      position: relative;
+    }
+    #act-rail-charts .chart-box canvas {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      bottom: 12px;
+      width: calc(100% - 24px) !important;
+      height: calc(100% - 24px) !important;
+    }
+    #act-rail-charts .chart-caption {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 14px;
+      color: var(--ds-muted);
+    }
+    #act-rail-charts .insight {
+      margin: 2rem auto 0;
+      max-width: 720px;
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ds-navy);
+      line-height: 1.45;
+    }
+    #act-rail-charts .cohort-callout {
+      margin-top: 2rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--ds-navy);
+      color: #fff;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #act-cliff.cliff-section,
+    #act-cliff {
+      width: 100%;
+      min-height: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background: var(--ds-bg);
+      z-index: 12;
+    }
+    #act-cliff.narr-section {
+      max-width: none;
+      margin-left: 0;
+      margin-right: 0;
+      padding: 2rem 0;
+    }
+    .cliff-canvas-wrap {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 0 1rem;
+      box-sizing: border-box;
+    }
+    #cliff-canvas,
+    .cliff-canvas {
+      width: 100% !important;
+      max-width: 100%;
+      height: 400px;
+      display: block;
+      position: relative;
+    }
+    #act-cliff .cliff-copy {
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+      margin-top: 1.5rem;
+      padding: 0 1rem;
+      font-size: 1.1rem;
+      color: var(--ds-text);
+      line-height: 1.55;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    #act-cliff .cliff-copy.is-in {
+      opacity: 1;
+    }
+
+    #act-recovery {
+      z-index: 12;
+      background: var(--ds-bg);
+    }
+    #act-recovery .recovery-context {
+      text-align: center;
+      font-size: clamp(1.1rem, 2.5vw, 1.45rem);
+      font-weight: 600;
+      color: var(--ds-navy);
+      max-width: 900px;
+      margin: 0 auto 2rem;
+      line-height: 1.45;
+    }
+    #act-recovery .recovery-slider-row {
+      max-width: 520px;
+      margin: 0 auto 2rem;
+    }
+    #act-recovery .recovery-slider-row label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ds-muted);
+      margin-bottom: 8px;
+    }
+    #act-recovery .recovery-slider-wrap {
+      position: relative;
+      width: 100%;
+      padding-top: 28px;
+    }
+    #act-recovery .slider-handle-label {
+      position: absolute;
+      top: 0;
+      left: 67%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #0891b2;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    #act-recovery input[type='range'] {
+      width: 100%;
+    }
+    #act-recovery .recovery-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 900px) {
+      #act-recovery .recovery-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+    #act-recovery .recovery-stat {
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+      background: var(--ds-card);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      text-align: center;
+    }
+    #act-recovery .recovery-stat .rs-val {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--ds-text);
+    }
+    #act-recovery .recovery-stat .rs-lbl {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ds-muted);
+      margin-top: 6px;
+    }
+    #act-recovery .recovery-stat .rs-sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ds-muted);
+      margin-top: 6px;
+      line-height: 1.35;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    #act-recovery .recovery-interpret {
+      text-align: center;
+      font-size: 15px;
+      color: var(--ds-muted);
+      max-width: 720px;
+      margin: 0 auto 2rem;
+      min-height: 3.2em;
+    }
+    .recovery-receipt {
+      max-width: 320px;
+      margin: 0 auto 2rem;
+      padding: 1.25rem 1.1rem 1.1rem;
+      background: #fafaf8;
+      font-family: 'Courier New', Courier, ui-monospace, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #1e293b;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+      border-top: 2px dashed #cbd5e1;
+      border-bottom: 2px dashed #cbd5e1;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .recovery-receipt.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .recovery-receipt .rr-head {
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+    .recovery-receipt .rr-sub {
+      text-align: center;
+      font-size: 9px;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+    .recovery-receipt .rr-dash {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      margin: 8px 0;
+    }
+    .recovery-receipt .rr-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 4px 0;
+    }
+    .recovery-receipt .rr-row strong {
+      font-weight: 700;
+    }
+    .recovery-receipt .rr-footer {
+      text-align: center;
+      font-size: 9px;
+      color: #94a3b8;
+      margin-top: 12px;
+    }
+    .recovery-receipt .rr-scissors {
+      text-align: center;
+      font-size: 11px;
+      margin-top: 6px;
+      color: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+  <div id="kpi-bar" aria-live="polite">
+    <span>ENTERED <span class="k-val" id="kpi-entered">14,548</span></span>
+    <span class="k-sep">·</span>
+    <span>CHURNED <span class="k-val" id="kpi-churned">0</span> <span class="k-val" id="kpi-churned-usd">×$0</span></span>
+    <span class="k-sep">·</span>
+    <span>ACTIVE <span class="k-val" id="kpi-active">50</span></span>
+    <span class="k-sep">·</span>
+    <span>CONFIRMED <span class="k-val" id="kpi-confirmed">0</span> <span class="k-val" id="kpi-confirmed-usd">×$0</span></span>
+    <span class="k-sep">·</span>
+    <span>AVG DAYS TO CHURN <span class="k-val">2</span></span>
+    <span class="k-sep">·</span>
+    <span>PLATFORM NOISE <span class="k-val">57%</span></span>
+  </div>
+
+  <header id="site-header">
+    <span class="sh-brand">Dead Reckoning</span>
+    <nav aria-label="Section">
+      <a href="#landing-hero">Overview</a>
+      <a href="#act-funnel">Funnel</a>
+      <a href="#act-buckets">Buckets</a>
+      <a href="#act-rail-charts">Launch</a>
+      <a href="#journey-scroll">Path</a>
+      <a href="#act-cliff">Cliff</a>
+      <a href="#network-section">Forensics</a>
+      <a href="#act-recovery">Recovery</a>
+    </nav>
+  </header>
+
+  <div id="story-opening" aria-hidden="false">
+    <canvas id="opening-rain-canvas" role="presentation"></canvas>
+  </div>
+
+  <div id="journey-rail" aria-hidden="true">
+    <span class="jr-label">Guided path</span>
+    <div class="jr-steps" id="journey-rail-steps"></div>
+  </div>
+
+  <div id="station-card" aria-live="polite"></div>
+
+  <canvas id="hero-canvas"></canvas>
+
+  <section id="landing-hero" aria-label="Introduction">
+    <div class="hero-ghost" aria-hidden="true"></div>
+    <div id="landing-hero-inner">
+      <p class="eyebrow">ERC-8004 · DEAD RECKONING</p>
+      <h1 id="hero-headline">The protocol earns <span class="cents">3¢</span> on every dollar it could.</h1>
+      <p class="subtitle">
+        34,563 agents registered. 433 ever made money. Dead Reckoning diagnoses every failure in between — classified, quantified, and ready to act on.
+      </p>
+      <div class="hero-stats">
+        <div class="hero-stat-card narr-wait" data-card="churn" id="hero-card-0">
+          <div class="hero-stat-val">76%</div>
+          <div class="hero-stat-label">of agents churned or never activated</div>
+        </div>
+        <div class="hero-stat-card narr-wait" data-card="unrealized" id="hero-card-1">
+          <div class="hero-stat-val">$215M</div>
+          <div class="hero-stat-label">unrealized potential from real agents</div>
+        </div>
+        <div class="hero-stat-card hero-stat-card--green narr-wait" data-card="recoverable" id="hero-card-2">
+          <div class="hero-stat-val">$32.7M</div>
+          <div class="hero-stat-label">realistic recoverable upside</div>
+        </div>
+      </div>
+      <p id="landing-scroll-cue">↓ SCROLL TO INVESTIGATE</p>
+    </div>
+  </section>
+
+  <section id="act-funnel" class="narr-section" aria-label="The funnel">
+    <p class="narr-section-label">The funnel · where agents disappear</p>
+    <div class="narr-card" style="position: relative; padding: 1.5rem 1.25rem 2rem">
+      <div id="funnel-rows"></div>
+      <div class="funnel-foot" id="funnel-foot">
+        <span class="funnel-foot-pill">$6.4M realized. $215M left on the table.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="act-buckets" class="narr-section" aria-label="Three loss buckets">
+    <p class="narr-section-label">Three buckets · only one is fixable</p>
+    <div class="bucket-grid">
+      <div class="bucket-card narr-card" data-bucket="0" id="bucket-0">
+        <div class="bucket-card-inner">
+          <div class="bucket-face front">
+            <span class="bucket-amt" style="color: #64748b">$296M</span>
+            <span class="bucket-tag" style="background: #64748b22; color: #64748b">NOT ADDRESSABLE</span>
+          </div>
+          <div class="bucket-face back narr-card" style="border-color: #64748b55">
+            <span class="bucket-amt" style="color: #64748b">$296M</span>
+            <strong style="font-size: 15px; color: var(--ds-text)">Structurally unreachable</strong>
+            <span style="font-size: 12px; color: var(--ds-muted); margin-top: 6px">20,015 agents</span>
+            <p class="bucket-desc">
+              Platform operators bulk-minting IDs, NFT wrappers, bots. No GTM motion touches this.
+              It is not a loss — it was never real revenue. Registry pollution only.
+            </p>
+            <span class="bucket-tag" style="background: #64748b; color: #fff">NOT ADDRESSABLE</span>
+          </div>
+        </div>
+      </div>
+      <div class="bucket-card narr-card" data-bucket="1" id="bucket-1">
+        <div class="bucket-card-inner">
+          <div class="bucket-face front">
+            <span class="bucket-amt" style="color: #ef9f27">$157M</span>
+            <span class="bucket-tag" style="background: #ef9f2722; color: #c2410c">PRODUCT + DEVREL FIX</span>
+          </div>
+          <div class="bucket-face back narr-card" style="border-color: #ef9f2755">
+            <span class="bucket-amt" style="color: #ef9f27">$157M</span>
+            <strong style="font-size: 15px; color: var(--ds-text)">Awareness &amp; DevRel gap</strong>
+            <span style="font-size: 12px; color: var(--ds-muted); margin-top: 6px">10,606 agents</span>
+            <p class="bucket-desc">
+              Real agents who registered and stopped before x402. Developers who didn't know x402 existed or how to enable it.
+            </p>
+            <span class="bucket-tag" style="background: #ef9f27; color: #0d1b2a">PRODUCT + DEVREL FIX</span>
+          </div>
+        </div>
+      </div>
+      <div class="bucket-card narr-card" data-bucket="2" id="bucket-2">
+        <div class="bucket-card-inner">
+          <div class="bucket-face front">
+            <span class="bucket-amt" style="color: #1d9e75">$52M</span>
+            <span class="bucket-2-amt-sub">→ $32.7M net recovery at 67% activation</span>
+            <span class="bucket-tag" style="background: #1d9e7522; color: #166534">ACT NOW</span>
+          </div>
+          <div class="bucket-face back narr-card" style="border-color: #1d9e7555">
+            <div class="bucket-amt-block">
+              <span class="bucket-amt" style="color: #1d9e75">$52M</span>
+              <span class="bucket-2-amt-sub">→ $32.7M net recovery at 67% activation</span>
+            </div>
+            <strong style="font-size: 15px; color: var(--ds-text)">Actually recoverable</strong>
+            <span style="font-size: 12px; color: var(--ds-muted); margin-top: 6px">3,509 agents</span>
+            <p class="bucket-desc">
+              Full pool: $52M · Realistic recovery at 67% fix rate: $32.7M net ($39.1M gross − $6.4M baseline).
+            </p>
+            <span class="bucket-tag" style="background: #1d9e75; color: #fff">ACT NOW</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="act-rail-charts" class="narr-section" aria-label="Launch wave revenue">
+    <p class="narr-section-label">The launch wave · revenue vs damage</p>
+    <p class="insight">
+      February was the protocol's biggest registration month. It was also its most destructive.
+    </p>
+    <div class="chart-wrap">
+      <div class="chart-box">
+        <canvas id="chart-monthly" aria-label="Monthly revenue ETH"></canvas>
+      </div>
+      <div class="chart-box">
+        <canvas id="chart-cohort" aria-label="Cohort survival"></canvas>
+      </div>
+    </div>
+    <p class="chart-caption" id="chart-caption">
+      Total realized: 3,205 ETH · $6.41M · Potential from clean base: $215M
+    </p>
+    <div class="cohort-callout" id="cohort-callout">
+      Feb 2026 cohort: 59% early-churn rate. By May: 41%. Retention is improving — but the launch wave damage is already priced in.
+    </div>
+  </section>
+
+  <div id="journey-scroll">
+    <!-- dead-reckoning: light-rail-v4 (if you view source and do not see this, you are not on this file) -->
+  </div>
+
+  <section id="act-cliff" class="narr-section cliff-section" aria-label="The cliff">
+    <div class="cliff-canvas-wrap">
+      <canvas id="cliff-canvas" class="cliff-canvas" aria-hidden="true"></canvas>
+    </div>
+    <div class="cliff-copy" id="cliff-copy">
+      <p>66% of abandoned agents quit within 3 days.</p>
+      <p>This is an onboarding failure, not a retention problem.</p>
+    </div>
+  </section>
+
+  <section id="network-section" aria-label="Churn network graph">
+    <p class="network-section-label">Every agent · classified by how it died</p>
+    <p class="network-section-desc">Color = failure type · Size = dollar exposure · Opacity = how long it survived</p>
+    <div class="sphere-legend" aria-hidden="true">
+      <span class="legend-item"><span class="legend-dot" style="background: #e24b4a"></span>Never activated</span>
+      <span class="legend-item"><span class="legend-dot" style="background: #ef9f27"></span>Abandoned</span>
+      <span class="legend-item"><span class="legend-dot" style="background: #a78bfa"></span>Stalled</span>
+      <span class="legend-item"><span class="legend-dot" style="background: #22d3ee"></span>Active</span>
+    </div>
+    <div class="network-canvas-wrap">
+      <canvas id="network-canvas"></canvas>
+      <div class="net-zoom-bar" aria-label="Zoom controls">
+        <button type="button" id="net-zoom-in" title="Zoom in">+</button>
+        <button type="button" id="net-zoom-out" title="Zoom out">−</button>
+      </div>
+    </div>
+    <div id="net-tooltip" role="tooltip" hidden></div>
+  </section>
+
+  <section id="act-recovery" class="narr-section" aria-label="Recovery modeler">
+    <p class="narr-section-label">What would it take?</p>
+    <p class="recovery-context">
+      3,942 agents configured x402. Only 433 are active today — an 11% activation rate. If we fix that:
+    </p>
+    <div class="recovery-slider-row">
+      <label for="recovery-slider" id="recovery-slider-label">Fix rate for x402-declared agents — 67%</label>
+      <div class="recovery-slider-wrap">
+        <div class="slider-handle-label" id="recovery-slider-pct-label">67%</div>
+        <input type="range" id="recovery-slider" min="0" max="100" value="67" step="1" aria-valuemin="0" aria-valuemax="100" aria-valuenow="67" />
+      </div>
+    </div>
+    <div class="recovery-stats">
+      <div class="recovery-stat">
+        <div class="rs-val" id="rs-agents">2,641</div>
+        <div class="rs-lbl">Agents activated</div>
+        <div class="rs-sub" id="rs-agents-sub">vs. 433 today</div>
+      </div>
+      <div class="recovery-stat">
+        <div class="rs-val" id="rs-gross">$39.1M</div>
+        <div class="rs-lbl">Gross protocol value</div>
+        <div class="rs-sub" id="rs-gross-sub">2,641 agents × $14,800 avg = $39.1M</div>
+      </div>
+      <div class="recovery-stat">
+        <div class="rs-val" id="rs-unlock">$32.7M</div>
+        <div class="rs-lbl">Net value unlocked</div>
+        <div class="rs-sub" id="rs-unlock-sub">above $6.4M baseline</div>
+      </div>
+    </div>
+    <p class="recovery-interpret" id="recovery-interpret">
+      Historically observed activation rate for genuine-user cohorts. Realistic ceiling without structural changes.
+    </p>
+    <div class="recovery-receipt" id="recovery-receipt" aria-label="Recovery breakdown receipt">
+      <div class="rr-head">PROTOCOL RECOVERY RECEIPT</div>
+      <div class="rr-sub">ERC-8004 · GHOST ANALYSIS</div>
+      <div class="rr-dash">- - - - - - - - - - - - -</div>
+      <div class="rr-row"><span>x402 declaration gap</span><span>$27.8M</span></div>
+      <div class="rr-row"><span>Day-one cliff fix</span><span>$24.2M</span></div>
+      <div class="rr-dash">- - - - - - - - - - - - -</div>
+      <div class="rr-row"><strong>SUBTOTAL (addressable)</strong><strong>$52.0M</strong></div>
+      <div class="rr-row"><span>Baseline already earned</span><span>-$6.4M</span></div>
+      <div class="rr-dash">- - - - - - - - - - - - -</div>
+      <div class="rr-row"><strong>NET RECOVERABLE</strong><strong>$32.7M</strong></div>
+      <div class="rr-dash">- - - - - - - - - - - - -</div>
+      <div class="rr-row"><span>At 67% fix rate:</span><span>$39.1M gross</span></div>
+      <div class="rr-row"><span>Agents activated:</span><span>2,641</span></div>
+      <div class="rr-dash">- - - - - - - - - - - - -</div>
+      <div class="rr-footer">THANK YOU FOR SHIPPING</div>
+      <div class="rr-scissors" aria-hidden="true">✂</div>
+    </div>
+  </section>
+
+  <div id="net-summary-backdrop" aria-hidden="true"></div>
+  <div id="net-summary-card" role="dialog" aria-modal="true" aria-hidden="true" hidden>
+    <button type="button" id="net-summary-close" aria-label="Close">×</button>
+    <div id="net-summary-body"></div>
+  </div>
+
+  <footer id="site-footer" aria-label="Colophon">
+    <div class="sf-inner">
+      <span class="sf-mark">Dead Reckoning</span>
+      <span class="sf-sep">·</span>
+      <span>ERC-8004 agent churn · scroll journey</span>
+    </div>
+  </footer>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js?v=20240614"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js?v=20240614"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js?v=20240614"></script>
+  <script>
+    window.__DR_CHURN_PROMISE__ = fetch('churn_master.csv')
+      .then(function (res) {
+        return res.text();
+      })
+      .then(function (text) {
+        var parsed = window.Papa.parse(text, { header: true, skipEmptyLines: true });
+        return (parsed.data || []).filter(function (row) {
+          return row && row.agent_id;
+        });
+      });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="narrative_real.js?v=20240614real1"></script>
+  <script type="module">
+    import * as THREE from 'three';
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    console.info('[Dead Reckoning v4] narrative + rail (real CSV)');
+
+    const churnRows = await window.__DR_CHURN_PROMISE__;
+    const nTot = Math.max(churnRows.length, 1);
+    function ct(type) {
+      return churnRows.filter(function (r) {
+        return r.churn_type === type;
+      }).length;
+    }
+    const cNever = ct('never_activated');
+    const cAb = ct('abandoned');
+    const cSt = ct('stalled_mid_funnel');
+    const cIm = ct('intent_mismatch');
+    const cGas = ct('gas_failure');
+    const cTo = ct('timeout');
+    function pctOf(c) {
+      return ((c / nTot) * 100).toFixed(1) + '%';
+    }
+
+    const FOG_COLOR = 0xe8f0f8;
+    const WAYPOINTS = [
+      new THREE.Vector3(-9, 1.5, 4),
+      new THREE.Vector3(-6, 1.5, 2),
+      new THREE.Vector3(-3, 1.5, 3.5),
+      new THREE.Vector3(0, 1.5, 1),
+      new THREE.Vector3(3, 1.5, 2.5),
+      new THREE.Vector3(6, 1.5, 0),
+    ];
+    const STATION_LABELS = [
+      'NEVER ACTIVATED',
+      'ABANDONED',
+      'STALLED',
+      'INTENT MISMATCH',
+      'GAS FAILURE',
+      'TIMEOUT',
+    ];
+
+    const heroCanvas = document.getElementById('hero-canvas');
+    const stationCard = document.getElementById('station-card');
+    const journeyScroll = document.getElementById('journey-scroll');
+    const kpiChurned = document.getElementById('kpi-churned');
+    const kpiChurnedUsd = document.getElementById('kpi-churned-usd');
+    const kpiActive = document.getElementById('kpi-active');
+    const kpiConfirmed = document.getElementById('kpi-confirmed');
+    const kpiConfirmedUsd = document.getElementById('kpi-confirmed-usd');
+
+    const STATIONS = [
+      {
+        num: '01',
+        color: '#ff4444',
+        title: 'NEVER ACTIVATED',
+        pct: pctOf(cNever),
+        desc: 'Declared x402 intent but never transacted',
+        quote:
+          cNever.toLocaleString('en-US') +
+          ' agents in churn_master.csv are classified never_activated (no on-chain activity in scope).',
+      },
+      {
+        num: '02',
+        color: '#ff7722',
+        title: 'ABANDONED',
+        pct: pctOf(cAb),
+        desc: 'Dropped in the first 3 days',
+        quote:
+          cAb.toLocaleString('en-US') +
+          ' agents show abandoned churn — transacted, then went dark beyond the activity window.',
+      },
+      {
+        num: '03',
+        color: '#ffaa22',
+        title: 'STALLED MID-FUNNEL',
+        pct: pctOf(cSt),
+        desc: 'Had funnel movement but stopped before monetization',
+        quote:
+          cSt.toLocaleString('en-US') +
+          ' agents stalled mid-funnel (callable / monetized signals without sustained wallet activity).',
+      },
+      {
+        num: '04',
+        color: '#4488ff',
+        title: 'INTENT MISMATCH',
+        pct: pctOf(cIm),
+        desc: "Payment schema didn't match any consumer",
+        quote:
+          cIm.toLocaleString('en-US') +
+          ' agents show intent mismatch (behavioral vs declared intent conflict while inactive).',
+      },
+      {
+        num: '05',
+        color: '#22aacc',
+        title: 'GAS FAILURE',
+        pct: pctOf(cGas),
+        desc: 'Trace reverts, no successful call',
+        quote:
+          cGas.toLocaleString('en-US') +
+          ' agents hit gas_failure — majority of failed traces were out-of-gas in the BigQuery model.',
+      },
+      {
+        num: '06',
+        color: '#8899aa',
+        title: 'TIMEOUT',
+        pct: pctOf(cTo),
+        desc: 'Went dark with no clear failure signal',
+        quote:
+          cTo.toLocaleString('en-US') +
+          ' agents match timeout churn (high failure rate vs tx volume, then extended inactivity).',
+      },
+    ];
+
+    function stationCardInner(s) {
+      return `
+        <div class="sc-top">
+          <div class="sc-numbox">${s.num}</div>
+          <div class="sc-titlecol">
+            <div class="sc-title">${s.title}</div>
+            <div class="sc-pct">${s.pct}</div>
+          </div>
+        </div>
+        <div class="sc-desc">${s.desc}</div>
+        <div class="sc-quote">${s.quote}</div>
+      `;
+    }
+
+    const journeyRailSteps = document.getElementById('journey-rail-steps');
+    const journeyRailStepEls = [];
+    if (journeyRailSteps) {
+      STATIONS.forEach((s) => {
+        const row = document.createElement('div');
+        row.className = 'jr-step';
+        row.innerHTML = `<span>${s.num}</span><span>${s.title}</span>`;
+        journeyRailSteps.appendChild(row);
+        journeyRailStepEls.push(row);
+      });
+    }
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(FOG_COLOR);
+    scene.fog = null;
+
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+    const renderer = new THREE.WebGLRenderer({ canvas: heroCanvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setClearColor(FOG_COLOR, 1);
+
+    function makeSkyGradientTexture() {
+      const c = document.createElement('canvas');
+      c.width = 4;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+      const g = ctx.createLinearGradient(0, 0, 0, 256);
+      g.addColorStop(0, '#c4d0dc');
+      g.addColorStop(1, '#dce4ec');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 4, 256);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.minFilter = THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      return tex;
+    }
+    const skyTex = makeSkyGradientTexture();
+    const skyPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(140, 70),
+      new THREE.MeshBasicMaterial({ map: skyTex, depthWrite: false, fog: false })
+    );
+    skyPlane.position.set(0, 22, -42);
+    scene.add(skyPlane);
+
+    const CLAY = 0xb8c8d8;
+    const clayMat = () =>
+      new THREE.MeshStandardMaterial({
+        color: CLAY,
+        emissive: CLAY,
+        emissiveIntensity: 0.12,
+        metalness: 0.06,
+        roughness: 0.92,
+      });
+
+    const amb = new THREE.AmbientLight(0xe8eef6, 0.62);
+    scene.add(amb);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0xd0dce8, 0.62);
+    scene.add(hemi);
+    const sun = new THREE.DirectionalLight(0xffffff, 0.95);
+    sun.position.set(12, 28, 14);
+    scene.add(sun);
+    const railGlowLight = new THREE.PointLight(0x55aaff, 1.8, 80, 2);
+    railGlowLight.position.set(0, 2, 0);
+    scene.add(railGlowLight);
+
+    const curve = new THREE.CatmullRomCurve3(WAYPOINTS, false, 'catmullrom', 0.5);
+
+    /** Fixed world offset from each rail sample — isometric “map” framing (single static shot). */
+    const CAMERA_WORLD_OFFSET = new THREE.Vector3(6.5, 14.2, 6.5);
+    const _camAim = new THREE.Vector3();
+    /** Camera samples the curve at this u only — view does not move with scroll. */
+    const FIXED_VIEW_U = 0.38;
+
+    function setCameraOnRail(u) {
+      const uu = Math.min(1, Math.max(0, u));
+      const P = curve.getPointAt(uu);
+      const L = curve.getLength();
+      const du = Math.min(0.34, 13 / Math.max(L, 1e-6));
+      const uF = Math.min(1 - 1e-6, uu + du);
+      const F = curve.getPointAt(uF);
+      _camAim.lerpVectors(P, F, 0.4);
+      camera.position.copy(P).add(CAMERA_WORLD_OFFSET);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(_camAim);
+    }
+
+    function offsetCurve(base, dist) {
+      const n = 160;
+      const pts = [];
+      const up = new THREE.Vector3(0, 1, 0);
+      for (let i = 0; i <= n; i++) {
+        const u = i / n;
+        const p = base.getPointAt(u);
+        const tan = base.getTangentAt(u).normalize();
+        let bin = new THREE.Vector3().crossVectors(tan, up);
+        if (bin.lengthSq() < 1e-8) bin = new THREE.Vector3(1, 0, 0);
+        bin.normalize();
+        pts.push(p.clone().addScaledVector(bin, dist));
+      }
+      return new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
+    }
+    const railL = offsetCurve(curve, -0.175);
+    const railR = offsetCurve(curve, 0.175);
+    const railMat = new THREE.MeshStandardMaterial({
+      color: 0xa8b8c8,
+      emissive: CLAY,
+      emissiveIntensity: 0.05,
+      metalness: 0.05,
+      roughness: 0.9,
+    });
+    const tubeSeg = 200;
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(railL, tubeSeg, 0.04, 8, false), railMat));
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(railR, tubeSeg, 0.04, 8, false), railMat));
+
+    const sleeperMat = clayMat();
+    const pillarMat = clayMat();
+    const deckMat = new THREE.MeshStandardMaterial({
+      color: CLAY,
+      emissive: CLAY,
+      emissiveIntensity: 0.08,
+      transparent: true,
+      opacity: 0.72,
+      metalness: 0.05,
+      roughness: 0.92,
+    });
+    const len = curve.getLength();
+    const sleeperGeo = new THREE.BoxGeometry(0.5, 0.04, 0.04);
+    const up = new THREE.Vector3(0, 1, 0);
+    for (let d = 0; d < len; d += 0.4) {
+      const u = d / len;
+      const p = curve.getPointAt(u);
+      const tan = curve.getTangentAt(u).normalize();
+      const mesh = new THREE.Mesh(sleeperGeo, sleeperMat);
+      mesh.position.copy(p);
+      mesh.quaternion.setFromUnitVectors(up, tan);
+      scene.add(mesh);
+    }
+    for (let d = 0; d < len; d += 1.2) {
+      const u = d / len;
+      const p = curve.getPointAt(u);
+      const h = Math.max(0.05, p.y);
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.08, h, 0.08), pillarMat);
+      pillar.position.set(p.x, h / 2, p.z);
+      scene.add(pillar);
+    }
+    for (let d = 0; d < len; d += 0.25) {
+      const u = d / len;
+      const p = curve.getPointAt(u);
+      const tan = curve.getTangentAt(u).normalize();
+      const deck = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.03, 0.12), deckMat);
+      deck.position.copy(p);
+      deck.quaternion.setFromUnitVectors(up, tan);
+      scene.add(deck);
+    }
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(50, 50),
+      new THREE.MeshStandardMaterial({
+        color: 0xc0cdd8,
+        emissive: 0xb8c4d4,
+        emissiveIntensity: 0.08,
+        metalness: 0.02,
+        roughness: 0.96,
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    const silMat = clayMat();
+    const nSil = 9;
+    for (let i = 0; i < nSil; i++) {
+      const h = 2.2 + Math.random() * 5.5;
+      const w = 0.55 + Math.random() * 0.65;
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, w * 0.85), silMat);
+      const z = -14 - Math.random() * 9;
+      const x = -22 + Math.random() * 44;
+      mesh.position.set(x, h / 2, z);
+      scene.add(mesh);
+    }
+
+    const bldgMat = clayMat();
+    for (let i = 0; i < 12; i++) {
+      const h = 0.7 + Math.random() * 2.0;
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.65 + Math.random() * 0.5, h, 0.65 + Math.random() * 0.5), bldgMat);
+      mesh.position.set(-11 + Math.random() * 22, h / 2, -3.5 - Math.random() * 5);
+      scene.add(mesh);
+    }
+
+    function makeLabelTexture(text) {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 192;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 512, 192);
+      ctx.fillStyle = '#0a0a1e';
+      ctx.font = 'bold 44px system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 256, 96);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    const stationMeshes = [];
+    const stationMaterials = [];
+    WAYPOINTS.forEach((wp, i) => {
+      const g = new THREE.Group();
+      g.position.copy(wp);
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 0.7), clayMat());
+      body.position.y = 0.45;
+      stationMaterials.push(body.material);
+      g.add(body);
+      const faceMat = new THREE.MeshStandardMaterial({
+        map: makeLabelTexture(STATION_LABELS[i]),
+        emissive: 0x000000,
+        emissiveIntensity: 0,
+        metalness: 0.05,
+        roughness: 0.55,
+      });
+      const face = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.3), faceMat);
+      face.position.set(0, 0.45, 0.36);
+      g.add(face);
+      const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 8), clayMat());
+      ant.position.y = 1.05;
+      g.add(ant);
+      const hum = clayMat();
+      const hgeo = new THREE.BoxGeometry(0.07, 0.14, 0.07);
+      for (let j = 0; j < 3; j++) {
+        const hm = new THREE.Mesh(hgeo, hum);
+        hm.position.set(0.9 + j * 0.12, 0.07, 0.2 + (j % 2) * 0.08);
+        g.add(hm);
+      }
+      scene.add(g);
+      stationMeshes.push(g);
+    });
+
+    const smokeGroup = new THREE.Group();
+    scene.add(smokeGroup);
+    const smokeParts = [];
+    const smokeMatTemplate = () =>
+      new THREE.MeshStandardMaterial({
+        color: 0xc8d4de,
+        emissive: 0xc8d4de,
+        emissiveIntensity: 0.02,
+        transparent: true,
+        opacity: 0.45,
+        roughness: 0.98,
+        metalness: 0,
+        depthWrite: false,
+      });
+
+    function addChimneySmoke(wx, wy, wz) {
+      for (let i = 0; i < 15; i++) {
+        const m = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), smokeMatTemplate());
+        m.userData.base = new THREE.Vector3(wx, wy, wz);
+        m.userData.dy = (i / 15) * 1.5;
+        m.userData.wobble = Math.random() * Math.PI * 2;
+        smokeGroup.add(m);
+        smokeParts.push(m);
+      }
+    }
+    [WAYPOINTS[0], WAYPOINTS[2], WAYPOINTS[5]].forEach((wp) => {
+      addChimneySmoke(wp.x + 0.5, wp.y + 1.18, wp.z + 0.28);
+    });
+
+    const idleGroup = new THREE.Group();
+    scene.add(idleGroup);
+    const idleTravelers = [];
+    for (let i = 0; i < 5; i++) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.35, 0.35),
+        (() => {
+          const m = clayMat();
+          m.transparent = true;
+          m.opacity = 1;
+          return m;
+        })()
+      );
+      mesh.userData.speed = 0.0008 + Math.random() * 0.0006;
+      mesh.userData.t = Math.random();
+      idleGroup.add(mesh);
+      idleTravelers.push(mesh);
+    }
+
+    const humanGroup = new THREE.Group();
+    scene.add(humanGroup);
+    const figMat = new THREE.MeshStandardMaterial({
+      color: 0xb0bfcc,
+      emissive: 0xb0bfcc,
+      emissiveIntensity: 0.14,
+      roughness: 0.9,
+      metalness: 0.04,
+      transparent: true,
+      opacity: 1,
+    });
+    const bodyGeo = new THREE.BoxGeometry(0.08, 0.15, 0.08);
+    const headGeo = new THREE.SphereGeometry(0.05, 10, 10);
+    for (let i = 0; i < 12; i++) {
+      const fig = new THREE.Group();
+      const body = new THREE.Mesh(bodyGeo, figMat.clone());
+      body.position.y = 0.075;
+      const head = new THREE.Mesh(headGeo, figMat.clone());
+      head.position.y = 0.15 + 0.05;
+      fig.add(body);
+      fig.add(head);
+      const near = WAYPOINTS[i % WAYPOINTS.length];
+      const a = new THREE.Vector3(
+        near.x + (Math.random() - 0.5) * 3.5,
+        0.08,
+        near.z + (Math.random() - 0.5) * 3.5
+      );
+      const b = a.clone().add(new THREE.Vector3((Math.random() - 0.5) * 4, 0, (Math.random() - 0.5) * 4));
+      b.y = 0.08;
+      a.y = 0.08;
+      fig.position.copy(a);
+      humanGroup.add(fig);
+      const dur = 3 + Math.random() * 3;
+      gsap.to(fig.position, {
+        x: b.x,
+        y: 0.08,
+        z: b.z,
+        duration: dur,
+        repeat: -1,
+        yoyo: true,
+        ease: 'none',
+        delay: Math.random() * 2.5,
+      });
+    }
+
+    const heroTraveler = new THREE.Mesh(
+      new THREE.BoxGeometry(0.55, 0.38, 0.38),
+      new THREE.MeshStandardMaterial({
+        color: 0x55aaff,
+        emissive: 0x55aaff,
+        emissiveIntensity: 1.0,
+        metalness: 0.15,
+        roughness: 0.35,
+        transparent: true,
+        opacity: 0,
+      })
+    );
+    scene.add(heroTraveler);
+
+    function churnToRoadblock(raw) {
+      const c = String(raw || '').toLowerCase().trim();
+      if (c === 'never_activated') return 0;
+      if (c === 'stalled_mid_funnel' || c === 'stalled') return 1;
+      if (c === 'abandoned') return 2;
+      if (c === 'intent_mismatch' || c === 'gas_failure' || c === 'timeout') return 3;
+      return null;
+    }
+
+    function roadblockThresholdU(blockIndex) {
+      return (blockIndex + 0.5) / 4;
+    }
+
+    const csvDots = [];
+    const dotGroup = new THREE.Group();
+    scene.add(dotGroup);
+    const dotGeo = new THREE.SphereGeometry(0.09, 10, 10);
+    const dotMatLive = new THREE.MeshStandardMaterial({
+      color: 0xa8b4c4,
+      emissive: CLAY,
+      emissiveIntensity: 0.05,
+      metalness: 0.05,
+      roughness: 0.88,
+    });
+    const dotMatDead = new THREE.MeshStandardMaterial({
+      color: 0x8a9aaa,
+      emissive: 0x8a9aaa,
+      emissiveIntensity: 0.06,
+      metalness: 0.05,
+      roughness: 0.9,
+    });
+
+    let churnCount = 0;
+    let churnUsd = 0;
+    let confirmedCount = 0;
+    let confirmedUsd = 0;
+    let activeCount = 0;
+
+    function updateKpi() {
+      kpiChurned.textContent = String(churnCount);
+      kpiChurnedUsd.textContent = `×$${churnUsd.toLocaleString('en-US')}`;
+      kpiConfirmed.textContent = String(confirmedCount);
+      kpiConfirmedUsd.textContent = `×$${confirmedUsd.toLocaleString('en-US')}`;
+      kpiActive.textContent = String(activeCount);
+    }
+
+    function sampleRowsEvenly(rows, n) {
+      if (rows.length <= n) return rows;
+      const out = [];
+      const step = (rows.length - 1) / (n - 1);
+      for (let i = 0; i < n; i++) out.push(rows[Math.round(i * step)]);
+      return out;
+    }
+
+    async function loadCsvDots() {
+      try {
+        const rows = churnRows.filter(function (r) {
+          return r.churn_type;
+        });
+        const picked = sampleRowsEvenly(rows, 50);
+        activeCount = picked.length;
+        picked.forEach((row) => {
+          const destiny = churnToRoadblock(row.churn_type);
+          const mesh = new THREE.Mesh(dotGeo, dotMatLive.clone());
+          mesh.userData.t = Math.random();
+          mesh.userData.speed = 0.00035 + Math.random() * 0.00025;
+          mesh.userData.deathStation = destiny;
+          mesh.userData.dead = false;
+          mesh.userData.prevU = mesh.userData.t;
+          dotGroup.add(mesh);
+          csvDots.push(mesh);
+        });
+        updateKpi();
+      } catch (e) {
+        console.warn('CSV load failed', e);
+        for (let i = 0; i < 50; i++) {
+          const mesh = new THREE.Mesh(dotGeo, dotMatLive.clone());
+          mesh.userData.t = Math.random();
+          mesh.userData.speed = 0.0004;
+          mesh.userData.deathStation = i % 4;
+          mesh.userData.dead = false;
+          mesh.userData.prevU = mesh.userData.t;
+          dotGroup.add(mesh);
+          csvDots.push(mesh);
+        }
+        activeCount = 50;
+        updateKpi();
+      }
+    }
+
+    function dieDot(mesh) {
+      if (mesh.userData.dead) return;
+      mesh.userData.dead = true;
+      mesh.material = dotMatDead.clone();
+      activeCount = Math.max(0, activeCount - 1);
+      churnCount++;
+      churnUsd += 14800;
+      updateKpi();
+      gsap.fromTo(
+        mesh.scale,
+        { x: 1, y: 1, z: 1 },
+        {
+          x: 0,
+          y: 0,
+          z: 0,
+          duration: 0.4,
+          ease: 'power2.in',
+          onComplete: () => {
+            mesh.userData.dead = false;
+            mesh.userData.t = Math.random() * 0.08;
+            mesh.userData.prevU = mesh.userData.t;
+            mesh.scale.set(1, 1, 1);
+            mesh.material.dispose();
+            mesh.material = dotMatLive.clone();
+            activeCount++;
+            updateKpi();
+          },
+        }
+      );
+    }
+
+
+    const NET_BG = 0xc8d4e0;
+    const NET_RECOMMENDATIONS = {
+      'Never Activated': 'Trigger re-onboarding with subsidized gas grant.',
+      Abandoned: 'Short-circuit drop-off with same-day human outreach and clearer first-call routing.',
+      Stalled: 'Unblock the funnel with targeted capability prompts and a staged x402 resume path.',
+      Active: 'Keep momentum: schedule health checks and proactive capacity alerts before saturation.',
+    };
+
+    function randomEthWallet() {
+      const hex = '0123456789abcdef';
+      let s = '0x';
+      for (let i = 0; i < 40; i++) s += hex[(Math.random() * 16) | 0];
+      return s;
+    }
+
+    function shortenWalletDisplay(w) {
+      if (!w || w.length < 12) return w || '';
+      return `${w.slice(0, 6)}...${w.slice(-4)}`;
+    }
+
+    function clampNetCameraZ() {
+      if (!netCamera) return;
+      netCamera.position.z = THREE.MathUtils.clamp(netCamera.position.z, 4, 18);
+      netCamera.position.x = 0;
+      netCamera.position.y = 0;
+      netCamera.lookAt(0, 0, 0);
+    }
+
+    function fillNetSummaryBody(mesh) {
+      const body = document.getElementById('net-summary-body');
+      if (!body || !mesh) return;
+      const w = mesh.userData.walletId;
+      const eth = mesh.userData.ethSnapshot;
+      const rec = NET_RECOMMENDATIONS[mesh.userData.clusterLabel] || 'Review telemetry and schedule a targeted follow-up.';
+      body.innerHTML = `
+        <div class="net-sum-wallet">${w}</div>
+        <div class="net-sum-badge" style="background:${mesh.userData.badgeBg};color:${mesh.userData.badgeFg}">${mesh.userData.clusterLabel}</div>
+        <div class="net-sum-grid">
+          <div><strong>Days active</strong><br />${mesh.userData.daysActive}</div>
+          <div><strong>ETH (snapshot)</strong><br />${eth}</div>
+          <div><strong>Tx count</strong><br />${mesh.userData.txCount}</div>
+        </div>
+        <p class="net-sum-rec">${rec}</p>
+      `;
+    }
+
+    function openNetSummary(mesh) {
+      const card = document.getElementById('net-summary-card');
+      const backdrop = document.getElementById('net-summary-backdrop');
+      if (!card || !mesh || !backdrop) return;
+      if (card.classList.contains('is-open')) {
+        fillNetSummaryBody(mesh);
+        return;
+      }
+      fillNetSummaryBody(mesh);
+      backdrop.classList.add('is-open');
+      card.hidden = false;
+      card.classList.add('is-open');
+      card.setAttribute('aria-hidden', 'false');
+      gsap.killTweensOf(card);
+      gsap.fromTo(
+        card,
+        {
+          yPercent: 100,
+          xPercent: -50,
+          left: '50%',
+          bottom: 0,
+          position: 'fixed',
+          transformOrigin: '50% 100%',
+        },
+        { yPercent: 0, duration: 0.35, ease: 'power2.out' }
+      );
+    }
+
+    function closeNetSummary() {
+      const card = document.getElementById('net-summary-card');
+      const backdrop = document.getElementById('net-summary-backdrop');
+      if (!card || !backdrop) return;
+      gsap.killTweensOf(card);
+      gsap.to(card, {
+        yPercent: 100,
+        duration: 0.35,
+        ease: 'power2.in',
+        transformOrigin: '50% 100%',
+        onComplete: () => {
+          backdrop.classList.remove('is-open');
+          card.classList.remove('is-open');
+          card.hidden = true;
+          card.setAttribute('aria-hidden', 'true');
+        },
+      });
+    }
+
+    let netRenderer = null;
+    let netScene = null;
+    let netCamera = null;
+    let graphRoot = null;
+    let netMeshesForRaycast = [];
+    let netHovered = null;
+    let netDrag = false;
+    let netLastX = 0;
+    let netLastY = 0;
+    const netRaycaster = new THREE.Raycaster();
+    const netPointerNdc = new THREE.Vector2();
+
+    function randomInBall(r) {
+      const v = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
+      if (v.lengthSq() < 1e-8) v.set(1, 0, 0);
+      return v.normalize().multiplyScalar(Math.cbrt(Math.random()) * r);
+    }
+
+    function buildClusterEdges(positions, maxDist, maxNeighbors) {
+      const maxD2 = maxDist * maxDist;
+      const pairKeys = new Set();
+      for (let i = 0; i < positions.length; i++) {
+        const cand = [];
+        for (let j = 0; j < positions.length; j++) {
+          if (i === j) continue;
+          const d2 = positions[i].distanceToSquared(positions[j]);
+          if (d2 <= maxD2 && d2 > 1e-10) cand.push({ j, d2 });
+        }
+        cand.sort((a, b) => a.d2 - b.d2);
+        for (let k = 0; k < Math.min(maxNeighbors, cand.length); k++) {
+          const j = cand[k].j;
+          const a = Math.min(i, j);
+          const b = Math.max(i, j);
+          pairKeys.add(`${a}|${b}`);
+        }
+      }
+      const verts = [];
+      for (const key of pairKeys) {
+        const [ia, ib] = key.split('|').map(Number);
+        const A = positions[ia];
+        const B = positions[ib];
+        verts.push(A.x, A.y, A.z, B.x, B.y, B.z);
+      }
+      return verts;
+    }
+
+    function initChurnNetworkGraph() {
+      const canvasEl = document.getElementById('network-canvas');
+      const tipEl = document.getElementById('net-tooltip');
+      const zoomIn = document.getElementById('net-zoom-in');
+      const zoomOut = document.getElementById('net-zoom-out');
+      const summaryClose = document.getElementById('net-summary-close');
+      const summaryBackdrop = document.getElementById('net-summary-backdrop');
+      if (!canvasEl || !tipEl) return;
+
+      const nodeBudget = 200;
+      const rawClusterCounts = {
+        'Never Activated': churnRows.filter(function (r) {
+          return r.churn_type === 'never_activated';
+        }).length,
+        'Abandoned': churnRows.filter(function (r) {
+          return (
+            r.churn_type === 'abandoned' ||
+            r.churn_type === 'intent_mismatch' ||
+            r.churn_type === 'gas_failure' ||
+            r.churn_type === 'timeout'
+          );
+        }).length,
+        Stalled: churnRows.filter(function (r) {
+          return r.churn_type === 'stalled_mid_funnel';
+        }).length,
+        Active: churnRows.filter(function (r) {
+          return r.churn_type === 'active';
+        }).length,
+      };
+      const clusterSum = Math.max(
+        1,
+        rawClusterCounts['Never Activated'] +
+          rawClusterCounts['Abandoned'] +
+          rawClusterCounts.Stalled +
+          rawClusterCounts.Active
+      );
+      function clusterNodes(label) {
+        return Math.max(8, Math.round((rawClusterCounts[label] / clusterSum) * nodeBudget));
+      }
+      const CLUSTER_SPEC = [
+        {
+          label: 'Never Activated',
+          count: clusterNodes('Never Activated'),
+          center: new THREE.Vector3(-3, 1, 0),
+          color: 0xe24b4a,
+          badgeBg: '#E24B4A',
+          badgeFg: '#ffffff',
+        },
+        {
+          label: 'Abandoned',
+          count: clusterNodes('Abandoned'),
+          center: new THREE.Vector3(2, 2, 0),
+          color: 0xef9f27,
+          badgeBg: '#EF9F27',
+          badgeFg: '#0d1b2a',
+        },
+        {
+          label: 'Stalled',
+          count: clusterNodes('Stalled'),
+          center: new THREE.Vector3(0, -2, 1),
+          color: 0xa78bfa,
+          badgeBg: '#A78BFA',
+          badgeFg: '#0d1b2a',
+        },
+        {
+          label: 'Active',
+          count: clusterNodes('Active'),
+          center: new THREE.Vector3(3, -1, -1),
+          color: 0x22d3ee,
+          badgeBg: '#22D3EE',
+          badgeFg: '#0d1b2a',
+        },
+      ];
+
+      netScene = new THREE.Scene();
+      netScene.background = new THREE.Color(NET_BG);
+      netScene.fog = new THREE.FogExp2(NET_BG, 0.018);
+
+      const sec = document.getElementById('network-section');
+
+      function hideNetTooltip() {
+        if (netHovered) {
+          netHovered.scale.set(1, 1, 1);
+          netHovered = null;
+        }
+        tipEl.hidden = true;
+      }
+
+      let netSectionInView = false;
+      if (sec) {
+        const netIo = new IntersectionObserver(
+          (entries) => {
+            const e = entries[0];
+            netSectionInView = !!(e && e.isIntersecting && e.intersectionRatio > 0.02);
+            if (!netSectionInView) hideNetTooltip();
+          },
+          { threshold: [0, 0.02, 0.06, 0.12] }
+        );
+        netIo.observe(sec);
+      }
+
+      const wrap = sec ? sec.querySelector('.network-canvas-wrap') : document.querySelector('.network-canvas-wrap');
+      const w = Math.max(320, wrap?.clientWidth || (sec && sec.clientWidth) || window.innerWidth);
+      const h = Math.max(400, wrap?.clientHeight || Math.floor(window.innerHeight * 0.62));
+      netCamera = new THREE.PerspectiveCamera(50, w / h, 0.1, 200);
+      netCamera.position.set(0, 0, 14);
+      clampNetCameraZ();
+
+      netRenderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, alpha: false });
+      netRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      netRenderer.outputColorSpace = THREE.SRGBColorSpace;
+      netRenderer.setClearColor(NET_BG, 1);
+      netRenderer.setSize(w, h, false);
+
+      graphRoot = new THREE.Group();
+      netScene.add(graphRoot);
+
+      netScene.add(new THREE.AmbientLight(0xf0f4f8, 0.55));
+      const key = new THREE.DirectionalLight(0xffffff, 0.38);
+      key.position.set(5, 10, 8);
+      netScene.add(key);
+
+      const nodeGeo = new THREE.SphereGeometry(0.06, 10, 10);
+      netMeshesForRaycast = [];
+      const allLineVerts = [];
+
+      CLUSTER_SPEC.forEach((spec) => {
+        const positions = [];
+        for (let i = 0; i < spec.count; i++) {
+          const pos = spec.center.clone().add(randomInBall(1.5));
+          positions.push(pos);
+          const mat = new THREE.MeshStandardMaterial({
+            color: spec.color,
+            emissive: spec.color,
+            emissiveIntensity: 0.22,
+            metalness: 0.06,
+            roughness: 0.55,
+          });
+          const mesh = new THREE.Mesh(nodeGeo, mat);
+          mesh.position.copy(pos);
+          mesh.userData.clusterLabel = spec.label;
+          mesh.userData.walletId = randomEthWallet();
+          mesh.userData.badgeBg = spec.badgeBg;
+          mesh.userData.badgeFg = spec.badgeFg;
+          mesh.userData.daysActive = 1 + Math.floor(Math.random() * 90);
+          mesh.userData.ethSnapshot = (0.001 + Math.random() * 2.399).toFixed(4);
+          mesh.userData.txCount = Math.floor(Math.random() * 13);
+          graphRoot.add(mesh);
+          netMeshesForRaycast.push(mesh);
+        }
+        const edgeVerts = buildClusterEdges(positions, 0.82, 5);
+        for (let j = 0; j < edgeVerts.length; j++) allLineVerts.push(edgeVerts[j]);
+      });
+
+      if (allLineVerts.length) {
+        const lg = new THREE.BufferGeometry();
+        lg.setAttribute('position', new THREE.Float32BufferAttribute(allLineVerts, 3));
+        const lineMat = new THREE.LineBasicMaterial({
+          color: 0xaabbcc,
+          transparent: true,
+          opacity: 0.2,
+          depthWrite: false,
+        });
+        graphRoot.add(new THREE.LineSegments(lg, lineMat));
+      }
+
+      let ptrDown = false;
+      let ptrSx = 0;
+      let ptrSy = 0;
+      let ptrDragged = false;
+
+      const applyZoomStep = (factor) => {
+        netCamera.position.multiplyScalar(factor);
+        clampNetCameraZ();
+      };
+      if (zoomIn) zoomIn.addEventListener('click', () => applyZoomStep(0.85));
+      if (zoomOut) zoomOut.addEventListener('click', () => applyZoomStep(1.15));
+
+      const onPointerUp = () => {
+        ptrDown = false;
+        netDrag = false;
+      };
+
+      canvasEl.addEventListener('pointerdown', (e) => {
+        ptrDown = true;
+        ptrDragged = false;
+        ptrSx = e.clientX;
+        ptrSy = e.clientY;
+        netLastX = e.clientX;
+        netLastY = e.clientY;
+        netDrag = true;
+        canvasEl.setPointerCapture(e.pointerId);
+      });
+      canvasEl.addEventListener('pointerup', (e) => {
+        if (ptrDown && !ptrDragged) {
+          const rect = canvasEl.getBoundingClientRect();
+          netPointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          netPointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          netRaycaster.setFromCamera(netPointerNdc, netCamera);
+          const hits = netRaycaster.intersectObjects(netMeshesForRaycast, false);
+          if (hits.length) openNetSummary(hits[0].object);
+        }
+        onPointerUp();
+      });
+      canvasEl.addEventListener('pointercancel', onPointerUp);
+
+      canvasEl.addEventListener('pointerleave', () => {
+        if (ptrDown) onPointerUp();
+        hideNetTooltip();
+      });
+
+      canvasEl.addEventListener('pointermove', (e) => {
+        const rect = canvasEl.getBoundingClientRect();
+        if (ptrDown) {
+          const adx = Math.abs(e.clientX - ptrSx) + Math.abs(e.clientY - ptrSy);
+          if (adx > 6) ptrDragged = true;
+        }
+        if (netDrag && ptrDragged) {
+          const dx = e.clientX - netLastX;
+          const dy = e.clientY - netLastY;
+          netLastX = e.clientX;
+          netLastY = e.clientY;
+          graphRoot.rotation.y += dx * 0.006;
+          graphRoot.rotation.x += dy * 0.006;
+          graphRoot.rotation.x = THREE.MathUtils.clamp(graphRoot.rotation.x, -0.82, 0.88);
+          return;
+        }
+        if (!netSectionInView) {
+          hideNetTooltip();
+          return;
+        }
+        netPointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        netPointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        netRaycaster.setFromCamera(netPointerNdc, netCamera);
+        const hits = netRaycaster.intersectObjects(netMeshesForRaycast, false);
+        const pick = hits.length ? hits[0].object : null;
+        if (pick !== netHovered) {
+          if (netHovered) netHovered.scale.set(1, 1, 1);
+          netHovered = pick;
+          if (netHovered) {
+            netHovered.scale.set(1.5, 1.5, 1.5);
+            tipEl.textContent = shortenWalletDisplay(netHovered.userData.walletId);
+            tipEl.hidden = false;
+          } else {
+            tipEl.hidden = true;
+          }
+        }
+        if (netHovered && !tipEl.hidden) {
+          tipEl.style.left = `${e.clientX + 14}px`;
+          tipEl.style.top = `${e.clientY + 14}px`;
+        }
+      });
+
+      if (summaryClose) summaryClose.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        closeNetSummary();
+      });
+      if (summaryBackdrop) {
+        summaryBackdrop.addEventListener('click', () => closeNetSummary());
+      }
+
+      resizeNetwork();
+      requestAnimationFrame(() => {
+        resizeNetwork();
+        requestAnimationFrame(() => resizeNetwork());
+      });
+    }
+
+    function resizeNetwork() {
+      if (!netRenderer || !netCamera) return;
+      const secEl = document.getElementById('network-section');
+      const wrap = secEl ? secEl.querySelector('.network-canvas-wrap') : document.querySelector('.network-canvas-wrap');
+      const w = Math.max(320, wrap?.clientWidth || secEl?.clientWidth || window.innerWidth);
+      const h = Math.max(400, wrap?.clientHeight || Math.floor(window.innerHeight * 0.62));
+      netCamera.aspect = w / h;
+      netCamera.updateProjectionMatrix();
+      netRenderer.setSize(w, h, false);
+    }
+
+    function resize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+      resizeNetwork();
+    }
+    resize();
+
+    const clock = new THREE.Clock();
+    const idleState = { blend: 1 };
+    let railScrollProgress = 0;
+
+    const JOURNEY_IDLE_END = 0.012;
+    const STATION_CARD_MIN_P = 0.02;
+    let tripArmed = false;
+    let lastScrollCardStation = -1;
+
+    ScrollTrigger.create({
+      trigger: '#journey-scroll',
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: true,
+      onUpdate(self) {
+        const p = self.progress;
+        railScrollProgress = Math.min(1, Math.max(0, p));
+        document.body.classList.toggle('journey-active', p > 0.02);
+
+        if (p > JOURNEY_IDLE_END && !tripArmed) {
+          tripArmed = true;
+          gsap.to(idleState, { blend: 0, duration: 0.4, ease: 'power2.out' });
+        } else if (p <= JOURNEY_IDLE_END && tripArmed) {
+          tripArmed = false;
+          gsap.to(idleState, { blend: 1, duration: 0.45, ease: 'power2.out' });
+        }
+
+        if (p >= 0.985) {
+          gsap.killTweensOf(stationCard);
+          gsap.set(stationCard, { opacity: 0, y: 12 });
+          journeyRailStepEls.forEach((el) => {
+            if (el) el.classList.remove('is-active');
+          });
+        } else if (p <= STATION_CARD_MIN_P) {
+          gsap.killTweensOf(stationCard);
+          gsap.set(stationCard, { opacity: 0, y: 12 });
+          lastScrollCardStation = -1;
+          journeyRailStepEls.forEach((el) => {
+            if (el) el.classList.remove('is-active');
+          });
+        } else {
+          const want = Math.min(5, Math.floor(p * 6));
+          journeyRailStepEls.forEach((el, i) => {
+            if (el) el.classList.toggle('is-active', i === want);
+          });
+          if (want !== lastScrollCardStation) {
+            gsap.killTweensOf(stationCard);
+            const comingFromHidden = lastScrollCardStation < 0;
+            lastScrollCardStation = want;
+            stationCard.innerHTML = stationCardInner(STATIONS[want]);
+            if (comingFromHidden) {
+              gsap.fromTo(
+                stationCard,
+                { opacity: 0, y: 12 },
+                { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' }
+              );
+            } else {
+              gsap.set(stationCard, { opacity: 1, y: 0 });
+            }
+          } else {
+            gsap.set(stationCard, { opacity: 1, y: 0 });
+          }
+        }
+      },
+    });
+
+    await loadCsvDots();
+    updateKpi();
+    initChurnNetworkGraph();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+      railGlowLight.position.copy(heroTraveler.position);
+
+      const ib = idleState.blend;
+      humanGroup.traverse((o) => {
+        if (o.isMesh && o.material) o.material.opacity = ib;
+      });
+      idleTravelers.forEach((m) => {
+        m.material.opacity = ib;
+      });
+      heroTraveler.material.opacity = 1 - ib;
+
+      const uHero = Math.min(0.9999, Math.max(0, railScrollProgress));
+      const uTan = Math.min(0.99995, uHero);
+      stationMaterials.forEach((mat) => {
+        mat.emissiveIntensity = 0.06 + 0.02 * Math.sin(elapsed * 0.35);
+      });
+
+      setCameraOnRail(FIXED_VIEW_U);
+
+      const tanHero = curve.getTangentAt(uTan).normalize();
+      let binH = new THREE.Vector3().crossVectors(tanHero, new THREE.Vector3(0, 1, 0));
+      if (binH.lengthSq() < 1e-6) binH = new THREE.Vector3(1, 0, 0);
+      binH.normalize();
+      const heroPt = curve.getPointAt(uHero);
+      heroTraveler.position.copy(heroPt.clone().addScaledVector(binH, 0.12));
+      heroTraveler.position.y += 0.25;
+      heroTraveler.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tanHero);
+
+      if (ib > 0.02) {
+        idleTravelers.forEach((m) => {
+          m.userData.t = (m.userData.t + m.userData.speed) % 1;
+          const p = curve.getPointAt(m.userData.t);
+          const tan = curve.getTangentAt(m.userData.t).normalize();
+          let bin = new THREE.Vector3().crossVectors(tan, new THREE.Vector3(0, 1, 0));
+          if (bin.lengthSq() < 1e-6) bin.set(1, 0, 0);
+          bin.normalize();
+          m.position.copy(p.clone().addScaledVector(bin, -0.12));
+          m.position.y += 0.2;
+          m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tan);
+        });
+      }
+
+      smokeParts.forEach((m) => {
+        m.userData.dy += 0.005;
+        if (m.userData.dy >= 1.5) m.userData.dy = 0;
+        const b = m.userData.base;
+        const t = m.userData.dy / 1.5;
+        const fade = (1 - t) * 0.5;
+        m.material.opacity = fade * ib;
+        m.position.set(
+          b.x + Math.sin(elapsed * 0.7 + m.userData.wobble) * 0.06,
+          b.y + m.userData.dy,
+          b.z + Math.cos(elapsed * 0.55 + m.userData.wobble) * 0.05
+        );
+      });
+
+      csvDots.forEach((mesh) => {
+        if (mesh.userData.dead) return;
+        const prevU = mesh.userData.t;
+        mesh.userData.t += mesh.userData.speed;
+        if (mesh.userData.t >= 1) {
+          if (mesh.userData.deathStation == null && !mesh.userData.dead) {
+            confirmedCount++;
+            confirmedUsd += 7400;
+            updateKpi();
+          }
+          mesh.userData.t -= 1;
+        }
+        const u = mesh.userData.t;
+        const ds = mesh.userData.deathStation;
+        if (ds != null) {
+          const thr = roadblockThresholdU(ds);
+          if (mesh.userData.prevU < thr && u >= thr) dieDot(mesh);
+        }
+        mesh.userData.prevU = mesh.userData.t;
+        const p = curve.getPointAt(Math.min(0.9999, u));
+        const tan = curve.getTangentAt(Math.min(0.9999, u)).normalize();
+        let bin = new THREE.Vector3().crossVectors(tan, new THREE.Vector3(0, 1, 0));
+        if (bin.lengthSq() < 1e-6) bin.set(1, 0, 0);
+        bin.normalize();
+        mesh.position.copy(p.clone().addScaledVector(bin, 0.18));
+        mesh.position.y += 0.22;
+      });
+
+      renderer.render(scene, camera);
+      if (netRenderer && netScene && netCamera) netRenderer.render(netScene, netCamera);
+    }
+    animate();
+
+    ScrollTrigger.addEventListener('refresh', () => {
+      resize();
+      resizeNetwork();
+    });
+    window.addEventListener('resize', () => {
+      resize();
+      resizeNetwork();
+      ScrollTrigger.refresh();
+    });
+    ScrollTrigger.refresh();
+  </script>
+</body>
+</html>
