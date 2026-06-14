@@ -1,8 +1,7 @@
 # Dead Reckoning
 > This protocol earns 3 cents on every dollar it could. Dead Reckoning shows you where the other 97 went.
-- 🎥 [Watch demo video]
+- 🎥 [Watch demo video]: https://www.loom.com/share/444e3c77765442ecb7aad09df840c20f 
 Why 98% of Protocol Registrations Never Monetize - Watch Video
-
 
 ---
 
