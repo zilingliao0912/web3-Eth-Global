@@ -1,114 +1,320 @@
 # Dead Reckoning
-> This protocol earns 3 cents on every dollar it could. Dead Reckoning shows you where the other 97 went.
-- 🎥 [Watch demo video]: https://www.loom.com/share/444e3c77765442ecb7aad09df840c20f 
-Why 98% of Protocol Registrations Never Monetize - Watch Video
+
+> **The Agent Adoption Copilot**
+>
+> Dead Reckoning identifies which ERC-8004 agents are failing, why they're failing, and what intervention is most likely to recover them.
+
+🎥 **Demo Video:** https://www.loom.com/share/444e3c77765442ecb7aad09df840c20f
 
 ---
 
 ## The Problem
 
-ERC-8004 launched in January 2026. 34,569 agents registered. Looked like a success.
+The agent economy has a visibility problem.
 
-**4,479 are generating revenue today. That's 13.0%.**
+Protocol teams can see registrations.
+They can see transactions.
+They cannot see everything in between.
 
-Protocol operators and DevRel leads can see registration numbers. They can't see where the money dies. There's no analytics layer for the agent economy — no way to diagnose why agents fail, when they quit, or which failures are actually fixable.
+When agent adoption stalls, every problem looks like a growth problem:
 
-Dune gives you raw data. Mixpanel gives you a funnel model. Nothing gives you both with on-chain identity. That's the gap Dead Reckoning fills.
+- Is onboarding broken?
+- Did developers never discover x402?
+- Did they configure payments but never activate?
+- Did they churn after first use?
+- Which wallets are actually recoverable?
 
----
+Today, no tool answers those questions.
 
-## What It Does
-
-Dead Reckoning is a scroll-driven analytics dashboard that classifies every ERC-8004 agent by failure type, maps the $215M revenue gap across the full funnel, and lets operators model recovery scenarios interactively.
-
-The story it tells:
-
-- 57.9% of registrations are noise — bots, NFT wrappers, platforms bulk-minting IDs
-- 10,607 real developers never discovered x402 — a DevRel problem, not a protocol problem
-- 1,754 configured x402 and never transacted
-- 1,683 hit the day-one cliff — transacted once and vanished within 3 days
-- $33.7M is recoverable with two targeted fixes
+Dead Reckoning reconstructs the entire agent lifecycle directly from public on-chain data.
 
 ---
 
-## Data Source
+## What Dead Reckoning Does
 
-Built entirely on Google BigQuery's public Ethereum dataset — every ERC-8004 registration, reputation event, validation record, and x402 configuration since protocol launch. No infrastructure, no rate limits, just SQL.
+Dead Reckoning is a diagnostic and recovery engine for the ERC-8004 ecosystem.
 
-```sql
--- Example: identify x402-declared agents that never transacted
-SELECT
-  agent_id,
-  registration_date,
-  x402_configured_at,
-  first_transaction_at
-FROM `bigquery-public-data.crypto_ethereum.erc8004_events`
-WHERE x402_configured_at IS NOT NULL
-  AND first_transaction_at IS NULL
+For every wallet, it:
+
+### 1. Classifies
+
+Identifies where an agent sits in the lifecycle:
+
+```text
+Registered
+↓
+Listed
+↓
+Callable
+↓
+Monetized
+↓
+Reviewed
 ```
+
+### 2. Diagnoses
+
+Determines why adoption failed:
+
+- Never Activated
+- Stalled Mid-Funnel
+- Gas Failure
+- Timeout
+- Intent Mismatch
+- Abandoned
+
+### 3. Prescribes
+
+Generates the highest-leverage recovery action:
+
+- Re-onboarding campaign
+- Subsidized gas grant
+- Human DevRel outreach
+- SDK implementation guide
+- Expansion opportunity
+
+> Most analytics tools stop at diagnosis.
+>
+> **Dead Reckoning recommends what to do next.**
+
+---
+
+## Why This Matters
+
+Most ecosystems respond to weak monetization by acquiring more users.
+
+Dead Reckoning shows that the biggest opportunity often already exists inside the funnel.
+
+Instead of asking:
+
+> How do we acquire more agents?
+
+It asks:
+
+> Which agents are recoverable right now?
+
+And:
+
+> What intervention creates the highest recovery value?
+
+The result is a shift from reporting metrics to driving action.
+
+---
+
+## Key Insights
+
+### Insight #1: The Ecosystem Appears Larger Than It Is
+
+57.9% of registrations are noise.
+
+The raw registration count includes:
+
+- Bulk mints
+- NFT wrappers
+- Platform-generated registrations
+- Duplicate metadata
+
+Dead Reckoning filters these signals to isolate genuine participants.
+
+### Insight #2: Activation Is the Biggest Bottleneck
+
+10,607 qualified agents never reached x402 activation.
+
+The largest opportunity is not retention.
+
+It's helping agents reach their first value moment.
+
+### Insight #3: The First 48 Hours Matter Most
+
+1,683 agents churned within 3 days.
+
+Most abandonment happens immediately after onboarding, suggesting the problem is activation and developer experience rather than long-term engagement.
+
+### Insight #4: Churn Is Not Permanent
+
+$33.7M of protocol value appears recoverable through targeted interventions.
+
+Not all churned wallets are lost.
+
+Many simply need the right intervention at the right stage.
+
+---
+
+## Example Recovery Workflow
+
+When an operator selects a wallet, Dead Reckoning does more than display metrics.
+
+It generates a diagnosis and recommended action.
+
+Example:
+
+```text
+Wallet Status:
+Never Activated
+
+Likely Failure Mode:
+Awareness Gap
+
+Recommended Intervention:
+Trigger re-onboarding with subsidized gas grant
+
+Estimated Recovery Value:
+$14,800
+
+Confidence:
+82%
+```
+
+The goal is not to identify failed wallets.
+
+The goal is to identify **recoverable wallets**.
+
+---
+
+## Technical Architecture
+
+Dead Reckoning is powered by an explainable on-chain classification engine.
+
+### Inputs
+
+- ERC-8004 Identity Registry
+- ERC-8004 Reputation Registry
+- Ethereum transaction history
+- Trace-level failure signals
+- x402 metadata declarations
+- Agent metadata and service definitions
+
+### Pipeline
+
+```text
+Raw On-Chain Events
+↓
+Noise Filtering
+↓
+Lifecycle Reconstruction
+↓
+Intent Classification
+↓
+Failure Diagnosis
+↓
+Recovery Recommendation
+```
+
+### Noise Filtering
+
+The system identifies:
+
+- Bulk mints
+- Duplicate URIs
+- NFT-wrapped agents
+- Platform operators
+- High fan-out wallets
+
+This separates vanity metrics from meaningful adoption signals.
+
+### Lifecycle Reconstruction
+
+Every agent is assigned a funnel stage:
+
+```text
+1. Ghost
+2. Listed
+3. Callable
+4. Monetized
+5. Reviewed
+```
+
+These stages are derived entirely from public on-chain activity.
+
+### Intent Classification
+
+Dead Reckoning combines:
+
+**Behavioral Intent**
+- Trading bots
+- Yield agents
+- Bridge agents
+- General-purpose agents
+
+**Declared Intent**
+- Parsed from ERC-8004 metadata descriptions
+
+When behavioral and declared intent disagree, the system flags an intent mismatch.
+
+> Behavior beats biography.
+
+### Failure Classification
+
+Each wallet is assigned a failure mode:
+
+- Never Activated
+- Stalled Mid-Funnel
+- Gas Failure
+- Timeout
+- Intent Mismatch
+- Abandoned
+- Active
+
+Unlike a black-box machine learning model, every classification can be traced directly to observable on-chain behavior.
+
+---
+
+## Why Blockchain?
+
+The data required to diagnose agent adoption only exists on-chain.
+
+Every registration, service declaration, x402 configuration, reputation event, transaction, and period of inactivity leaves an immutable trail.
+
+Traditional analytics tools require teams to manually instrument events.
+
+Dead Reckoning reconstructs the entire lifecycle from public blockchain data alone.
 
 ---
 
 ## Dashboard Structure
 
-| Act | Section | What It Shows |
-|-----|---------|---------------|
-| 1 | The Indictment | 87.0% failure rate · $215M unrealized · $22.2M recoverable |
-| 2 | The Collapse | Animated funnel: 34,569 → 14,553 → 3,946 → 2,192 → 433 |
-| 3 | The Timeline | Monthly revenue + cohort churn rates (Feb 79% → May 93%) |
-| 4 | The Forensics | 3D agent sphere: color = failure type, size = dollar exposure |
-| 5 | The Bill | Loss itemized by churn category |
-| 6 | The Turn | Interactive recovery modeler with live slider |
+| Section | Purpose |
+|----------|----------|
+| The Indictment | Quantifies unrealized protocol value |
+| The Collapse | Reconstructs the agent adoption funnel |
+| The Timeline | Reveals cohort-level churn behavior |
+| The Forensics | Visualizes wallet failure clusters |
+| The Bill | Attributes value loss by failure type |
+| The Recovery Engine | Models intervention scenarios and recovered value |
 
 ---
 
-## Key Findings
+## Origin Story
 
-- $16.9M realized against $215M clean-base potential — a 7.9% realization rate
-- February 2026 was the biggest registration month and the worst retention month simultaneously — 79% of that cohort churned within 7 days
-- Churn is improving: Feb 79% → May 93%, but the launch wave damage is already priced in
-- $22.2M is realistically recoverable at the historically observed 67% activation rate for genuine-user cohorts
-- 61.2% of abandoned agents quit within 3 days — this is an onboarding failure, not a retention problem
+Dead Reckoning began as a completely different project.
 
----
+After spending ETHGlobal week speaking with founders, protocol operators, ecosystem teams, and infrastructure providers, one pattern emerged repeatedly:
 
-## The Three Buckets
+> Nobody knew where agent adoption was breaking.
 
-| Bucket | Agents | Value | Status |
-|--------|--------|-------|--------|
-| Registry pollution (bots, wrappers) | 20,016 | $296M | Not addressable |
-| Awareness & DevRel gap | 10,607 | $157M | Product + DevRel fix |
-| Actually recoverable | 3,612 | $33.7M | Act now |
+The project evolved through multiple iterations before focusing on the problem that surfaced consistently across conversations:
 
----
+**The ecosystem lacked visibility into activation, churn, and recovery opportunities.**
 
-## Recovery Model
-x402-declared agents:       3,946
-
-Currently active:             433  (11.0% activation rate)
-
-Historical genuine-user rate:  67%
-At 67% fix rate:
-
-New active agents:        2,644
-
-Value unlocked:          $22.2M
-
-Gross protocol value:    $39.1M
-
-The two fixes required:
-1. x402 declaration → transaction conversion (tooling + DevRel)
-2. First 48 hours of the developer experience (onboarding UX)
+Dead Reckoning was built to answer that question.
 
 ---
 
 ## Tech Stack
 
-- **Data:** Google BigQuery (Ethereum Foundation ERC-8004 registry)
-- **Visualization:** Three.js (agent sphere), Chart.js (funnel + timeline)
-- **Animations:** IntersectionObserver scroll triggers, CSS 3D transforms
-- **Frontend:** Vanilla JS + HTML/CSS, no backend required
-- **Data pipeline:** Live BigQuery queries → churn_master.csv → dashboard
+- Google BigQuery
+- Ethereum Public Datasets
+- SQL-based Classification Engine
+- Vanilla JavaScript
+- HTML/CSS
+- Three.js
+- Chart.js
+
+No indexing infrastructure.
+No custom subgraphs.
+No proprietary data.
+
+Just public blockchain data and an explainable analytics engine.
 
 ---
 
@@ -120,17 +326,38 @@ cd web3-Eth-Global
 python3 -m http.server
 ```
 
-Open `http://localhost:8000/index_real.html` — best viewed at 1280px+ width. Requires `churn_master.csv` in the project root (run `query_churn_master.py` to generate).
+Open:
+
+```text
+http://localhost:8000/index_real.html
+```
+
+Generate the dataset:
+
+```bash
+python query_churn_master.py
+```
 
 ---
 
 ## Built At
 
 **ETHGlobal New York 2026**
-Targeting: Google Cloud — Best On-Chain Agent Economy Application
+
+Built using Google BigQuery and the Ethereum Foundation ERC-8004 registries.
 
 ---
 
-## The Close
+## The Vision
 
-Everyone else built a product. This is a mirror. It shows what a protocol looks like from the outside — and what it's worth if you fix the first 48 hours.
+Most teams are building agents.
+
+Dead Reckoning helps ecosystems understand why agents succeed, fail, and churn.
+
+Today it diagnoses adoption failures.
+
+Tomorrow it becomes an adoption copilot that automatically recommends—or executes—the highest-leverage intervention.
+
+Because the agent economy doesn't have a growth problem.
+
+**It has a visibility problem.**
