@@ -4,7 +4,7 @@
 >
 > Dead Reckoning identifies which ERC-8004 agents are failing, why they're failing, and what intervention is most likely to recover them.
 
-🎥 **Demo Video:** Measuring Adoption Leaks in Agent Ecosystems - Watch Video
+🎥 **Demo Video:** https://www.loom.com/share/c6cea9569b49492cbf07ee0d51f54ed6 
 
 
 ---
